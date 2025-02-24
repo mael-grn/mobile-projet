@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.room.Room
+import com.example.routineapp.data.Routine
 import com.mobileuqac.routines.data.AppDatabase
 import com.mobileuqac.routines.data.Categorie
 import com.mobileuqac.routines.data.Periodicite

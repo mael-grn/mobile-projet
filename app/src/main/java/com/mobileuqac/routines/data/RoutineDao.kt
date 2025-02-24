@@ -1,21 +1,19 @@
 package com.mobileuqac.routines.data
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RoutineDao {
-    @Query("SELECT * FROM routine")
-    fun getAll(): List<Routine>
+    @Query("SELECT * FROM routines")
+    fun getAllRoutines(): Flow<List<Routine>>
 
-    @Query("SELECT * FROM routine WHERE id = :id LIMIT 1")
-    fun getById(id: Int): Routine
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRoutine(routine: Routine)
 
-    @Insert
-    fun insertAll(vararg routines: Routine)
+    @Update
+    suspend fun updateRoutine(routine: Routine)
 
     @Delete
-    fun delete(routine: Routine)
+    suspend fun deleteRoutine(routine: Routine)
 }
