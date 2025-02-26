@@ -22,11 +22,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.room.Room
 import com.mobileuqac.routines.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 class MainActivity : ComponentActivity() {
@@ -37,14 +39,14 @@ class MainActivity : ComponentActivity() {
             AppDatabase::class.java, "database-name"
         ).build()
         setContent {
-            RoutineCreationScreen(db)
+            //RoutineCreationScreen(db)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutineCreationScreen(db: AppDatabase) {
+fun RoutineCreationScreen(db: AppDatabase, navController: NavController) {
     val routineDao = db.routineDao()
     val context = LocalContext.current
 
@@ -122,8 +124,12 @@ fun RoutineCreationScreen(db: AppDatabase) {
                     )
                     CoroutineScope(Dispatchers.IO).launch {
                         routineDao.insertAll(newRoutine)
+
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Routine ajoutée", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack()
+                        }
                     }
-                    Toast.makeText(context, "Routine ajoutée", Toast.LENGTH_SHORT).show()
                 }
             },
             shape = RoundedCornerShape(8.dp)
