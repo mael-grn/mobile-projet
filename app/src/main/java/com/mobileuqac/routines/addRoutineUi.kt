@@ -127,7 +127,6 @@ fun RoutineCreationScreen(db: AppDatabase, navController: NavController) {
                     )
                     CoroutineScope(Dispatchers.IO).launch {
                         routineDao.insertAll(newRoutine)
-
                         withContext(Dispatchers.Main) {
                             Toast.makeText(context, "Routine ajoutée", Toast.LENGTH_SHORT).show()
                             navController.popBackStack()
@@ -176,44 +175,53 @@ fun <T> DropDownSelector(label: String, selectedItem: String, items: List<T>, ex
 @Composable
 fun DateTimePicker(label: String, selectedDate: Date, onDateSelected: (Date) -> Unit) {
     val context = LocalContext.current
-    val calendar = Calendar.getInstance().apply { time = selectedDate }
+    val tempCalendar = remember { Calendar.getInstance() }
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
 
     Button(
-        onClick = { showDatePicker = true },
+        onClick = {
+            tempCalendar.time = selectedDate
+            showDatePicker = true
+        },
         colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
     ) {
         Text("$label: ${selectedDate.toLocaleString()}", color = Color.White)
     }
 
     if (showDatePicker) {
-        android.app.DatePickerDialog(
-            context,
-            { _, year, month, day ->
-                calendar.set(year, month, day)
-                showDatePicker = false
-                showTimePicker = true
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        LaunchedEffect(Unit) {
+            android.app.DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    tempCalendar.set(Calendar.YEAR, year)
+                    tempCalendar.set(Calendar.MONTH, month)
+                    tempCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                    showDatePicker = false
+                    showTimePicker = true
+                },
+                tempCalendar.get(Calendar.YEAR),
+                tempCalendar.get(Calendar.MONTH),
+                tempCalendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
     }
 
     if (showTimePicker) {
-        TimePickerDialog(
-            context,
-            { _, hour, minute ->
-                calendar.set(Calendar.HOUR_OF_DAY, hour)
-                calendar.set(Calendar.MINUTE, minute)
-                onDateSelected(calendar.time)
-                showTimePicker = false
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            true
-        ).show()
+        LaunchedEffect(Unit) {
+            TimePickerDialog(
+                context,
+                { _, hourOfDay, minute ->
+                    tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                    tempCalendar.set(Calendar.MINUTE, minute)
+                    onDateSelected(tempCalendar.time)
+                    showTimePicker = false
+                },
+                tempCalendar.get(Calendar.HOUR_OF_DAY),
+                tempCalendar.get(Calendar.MINUTE),
+                true
+            ).show()
+        }
     }
 }
