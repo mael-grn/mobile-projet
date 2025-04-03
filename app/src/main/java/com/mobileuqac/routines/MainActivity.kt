@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -43,6 +45,12 @@ import java.util.Date
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TextButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -136,7 +144,7 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
         }
     }
 
-    Scaffold (
+    Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AddRoutine.route) },
@@ -146,7 +154,7 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
             }
         }
     ) { innerPadding ->
-        Column (
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -158,11 +166,15 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
                     color = Color.White,
                     modifier = Modifier.padding(16.dp)
                 )
-            }
-            else {
+            } else {
                 LazyColumn {
                     items(routines) { routine ->
-                        RoutineItem(routine)
+                        RoutineItem(routine = routine, onDelete = { toDelete ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                db.routineDao().delete(toDelete)
+                                routines = db.routineDao().getAll()
+                            }
+                        })
                     }
                 }
             }
@@ -172,20 +184,54 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
 
 
 
+
 @Composable
-fun RoutineItem(routine: Routine) {
-    Card (
+fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Confirmer la suppression") },
+            text = { Text("Voulez-vous vraiment supprimer cette routine ?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete(routine)
+                    showDialog = false
+                }) {
+                    Text("Oui")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Non")
+                }
+            }
+        )
+    }
+
+    Card(
         modifier = Modifier
             .padding(8.dp)
-            .fillMaxWidth(),
-            //colors = CardDefaults.cardColors(containerColor = Color.DarkGray)
+            .fillMaxWidth()
     ) {
-        Column (
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(routine.nom ?: "", color = Color.White, style = MaterialTheme.typography.titleLarge)
-            Text("Catégorie: ${routine.categorie.name}", color = Color.LightGray)
-            Text("Périodicité: ${routine.periodicite.name}", color = Color.LightGray)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(routine.nom ?: "", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                    Text("Catégorie: ${routine.categorie.name}", color = Color.LightGray)
+                    Text("Périodicité: ${routine.periodicite.name}", color = Color.LightGray)
+                }
+
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Supprimer",
+                        tint = Color.LightGray
+                    )
+                }
+            }
         }
     }
 }
+
