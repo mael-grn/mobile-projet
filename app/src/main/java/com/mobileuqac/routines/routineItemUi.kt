@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.mobileuqac.routines.data.Routine
 
 @Composable
-fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit) {
+fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit, onClick: (Routine) -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
@@ -63,6 +63,9 @@ fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit) {
     }
 
     Card(
+        onClick = {
+            onClick(routine)
+        },
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),

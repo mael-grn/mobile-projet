@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.room.Room
 import com.mobileuqac.routines.data.AppDatabase
 import com.mobileuqac.routines.ui.RoutineCreationScreen
+import com.mobileuqac.routines.ui.RoutineEditScreen
 import com.mobileuqac.routines.ui.theme.RoutinesTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,6 +52,16 @@ class MainActivity : ComponentActivity() {
                         exitTransition = { scaleOut(animationSpec = tween(500)) }
                     ) {
                         HomeScreen(navController, db)
+                    }
+
+                    composable(
+                        route = Screen.EditRoutine.route,
+                        arguments = listOf(navArgument("routineId") { type = NavType.IntType }),
+                        enterTransition = { scaleIn(animationSpec = tween(500)) },
+                        exitTransition = { scaleOut(animationSpec = tween(500)) }
+                    ) { backStackEntry ->
+                        val routineId = backStackEntry.arguments?.getInt("routineId") ?: return@composable
+                        RoutineEditScreen(db = db, navController = navController, routineId = routineId)
                     }
 
                     composable(

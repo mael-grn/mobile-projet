@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.mobileuqac.routines.data.AppDatabase
@@ -88,19 +89,25 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
 
                     Text(
                         text = "Appuyez sur le bouton + pour ajouter une nouvelle routine",
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
             } else {
                 LazyColumn {
                     items(routines) { routine ->
-                        RoutineItem(routine = routine, onDelete = { toDelete ->
-                            CoroutineScope(Dispatchers.IO).launch {
-                                db.routineDao().delete(toDelete)
-                                routines = db.routineDao().getAll()
+                        RoutineItem(
+                            routine = routine,
+                            onDelete = { toDelete ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    db.routineDao().delete(toDelete)
+                                    routines = db.routineDao().getAll()
+                                }
+                            },
+                            onClick = { toEdit ->
+                                navController.navigate(Screen.EditRoutine.createRoute(toEdit.id))
                             }
-                        })
+                        )
                     }
                 }
             }

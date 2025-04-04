@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface RoutineDao {
@@ -15,6 +16,9 @@ interface RoutineDao {
 
     @Insert
     fun insertAll(vararg routines: Routine)
+
+    @Update
+    fun update(routine: Routine)
 
     @Delete
     fun delete(routine: Routine)
