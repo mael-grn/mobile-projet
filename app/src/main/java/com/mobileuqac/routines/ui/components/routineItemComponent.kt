@@ -1,4 +1,4 @@
-package com.mobileuqac.routines
+package com.mobileuqac.routines.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

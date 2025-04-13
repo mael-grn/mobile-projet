@@ -1,5 +1,6 @@
 package com.mobileuqac.routines
 
+import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -12,16 +13,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import java.text.DateFormat
 import java.util.Calendar
 import java.util.Date
 
 @Composable
-fun DateTimePicker(label: String, selectedDate: Date, onDateSelected: (Date) -> Unit) {
+fun DateTimePicker(label: String, selectedDate: Date, onDateChanged: (Date) -> Unit) {
     val context = LocalContext.current
     val tempCalendar = remember { Calendar.getInstance() }
+    tempCalendar.time = selectedDate // Initialize with the provided date
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormatter = remember(context) { DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT) }
 
     Button(
         onClick = {
@@ -30,12 +35,16 @@ fun DateTimePicker(label: String, selectedDate: Date, onDateSelected: (Date) -> 
         },
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
-        Text("$label: ${selectedDate.toLocaleString()}", color = MaterialTheme.colorScheme.onBackground)
+        Text("$label: ${dateFormatter.format(selectedDate)}", color = MaterialTheme.colorScheme.onBackground)
     }
 
     if (showDatePicker) {
-        LaunchedEffect(Unit) {
-            android.app.DatePickerDialog(
+        LaunchedEffect(showDatePicker) {
+            val initialYear = tempCalendar.get(Calendar.YEAR)
+            val initialMonth = tempCalendar.get(Calendar.MONTH)
+            val initialDay = tempCalendar.get(Calendar.DAY_OF_MONTH)
+
+            val datePickerDialog = DatePickerDialog(
                 context,
                 { _, year, month, dayOfMonth ->
                     tempCalendar.set(Calendar.YEAR, year)
@@ -44,27 +53,34 @@ fun DateTimePicker(label: String, selectedDate: Date, onDateSelected: (Date) -> 
                     showDatePicker = false
                     showTimePicker = true
                 },
-                tempCalendar.get(Calendar.YEAR),
-                tempCalendar.get(Calendar.MONTH),
-                tempCalendar.get(Calendar.DAY_OF_MONTH)
-            ).show()
+                initialYear,
+                initialMonth,
+                initialDay
+            )
+            datePickerDialog.setOnDismissListener { showDatePicker = false }
+            datePickerDialog.show()
         }
     }
 
     if (showTimePicker) {
-        LaunchedEffect(Unit) {
-            TimePickerDialog(
+        LaunchedEffect(showTimePicker) {
+            val initialHour = tempCalendar.get(Calendar.HOUR_OF_DAY)
+            val initialMinute = tempCalendar.get(Calendar.MINUTE)
+
+            val timePickerDialog = TimePickerDialog(
                 context,
                 { _, hourOfDay, minute ->
                     tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                     tempCalendar.set(Calendar.MINUTE, minute)
-                    onDateSelected(tempCalendar.time)
+                    onDateChanged(tempCalendar.time) // Call the provided callback
                     showTimePicker = false
                 },
-                tempCalendar.get(Calendar.HOUR_OF_DAY),
-                tempCalendar.get(Calendar.MINUTE),
+                initialHour,
+                initialMinute,
                 true
-            ).show()
+            )
+            timePickerDialog.setOnDismissListener { showTimePicker = false }
+            timePickerDialog.show()
         }
     }
 }

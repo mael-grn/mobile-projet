@@ -1,10 +1,11 @@
 package com.mobileuqac.routines
 
+import AddRoutineViewModel
+import EditRoutineViewModel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
@@ -20,11 +21,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
 import com.mobileuqac.routines.data.AppDatabase
-import com.mobileuqac.routines.ui.RoutineCreationScreen
-import com.mobileuqac.routines.ui.RoutineEditScreen
 import com.mobileuqac.routines.ui.theme.RoutinesTheme
+import com.mobileuqac.routines.ui.views.AddRoutineView
+import com.mobileuqac.routines.ui.views.EditRoutineView
+import com.mobileuqac.routines.ui.views.HomeScreen
+import com.mobileuqac.routines.ui.views.RoutineCompletionScreen
 
-class MainActivity : ComponentActivity() {
+class MainActivity() : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -33,6 +36,9 @@ class MainActivity : ComponentActivity() {
             applicationContext,
             AppDatabase::class.java, "database-name"
         ).build()
+
+        val addRoutineViewModel = AddRoutineViewModel(db.routineDao())
+        val editRoutineViewModel = EditRoutineViewModel(db.routineDao())
 
         enableEdgeToEdge()
 
@@ -61,7 +67,7 @@ class MainActivity : ComponentActivity() {
                         exitTransition = { scaleOut(animationSpec = tween(500)) }
                     ) { backStackEntry ->
                         val routineId = backStackEntry.arguments?.getInt("routineId") ?: return@composable
-                        RoutineEditScreen(db = db, navController = navController, routineId = routineId)
+                        EditRoutineView(navController = navController, routineId = routineId, viewModel = editRoutineViewModel)
                     }
 
                     composable(
@@ -79,7 +85,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ) {
-                        RoutineCreationScreen(navController, db)
+                        AddRoutineView(navController, addRoutineViewModel)
                     }
                     composable(Screen.RoutineCompletions.route) { backStackEntry ->
                         val routineId = backStackEntry.arguments?.getString("routineId")?.toIntOrNull() ?: return@composable

@@ -22,4 +22,7 @@ interface RoutineDao {
 
     @Delete
     fun delete(routine: Routine)
+
+    @Insert
+    fun insert(newRoutine: Routine)
 }

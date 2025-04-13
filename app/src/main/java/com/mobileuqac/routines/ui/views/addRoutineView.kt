@@ -1,49 +1,47 @@
-package com.mobileuqac.routines.ui
+package com.mobileuqac.routines.ui.views
 
+import AddRoutineViewModel
 import DropDown
-import androidx.compose.foundation.background
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.mobileuqac.routines.DateTimePicker
+import com.mobileuqac.routines.Screen
 import com.mobileuqac.routines.data.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.*
-import androidx.compose.material.icons.filled.Add
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoutineCreationScreen(navController: NavController, db: AppDatabase) {
-
-    val routineDao = db.routineDao()
+fun AddRoutineView(navController: NavController, viewModel: AddRoutineViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    var name by remember { mutableStateOf(TextFieldValue()) }
-    var description by remember { mutableStateOf(TextFieldValue()) }
-    var dateDebut by remember { mutableStateOf(Date()) }
-    var dateFin by remember { mutableStateOf(Date()) }
-    var selectedCategory by remember { mutableStateOf(Categorie.TRAVAIL) }
-    var selectedPeriodicity by remember { mutableStateOf(Periodicite.QUOTIDIENNE) }
-    var selectedPriority by remember { mutableStateOf(Priorite.MOYENNE) }
-    var categoryExpanded by remember { mutableStateOf(false) }
-    var periodicityExpanded by remember { mutableStateOf(false) }
-    var priorityExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(uiState.isRoutineAdded) {
+        if (uiState.isRoutineAdded) {
+            Toast.makeText(context, "Routine ajoutée", Toast.LENGTH_SHORT).show()
+            navController.popBackStack()
+            viewModel.resetIsRoutineAdded()
+        }
+    }
+
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearErrorMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -87,8 +85,8 @@ fun RoutineCreationScreen(navController: NavController, db: AppDatabase) {
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
+                value = uiState.name,
+                onValueChange = viewModel::updateName,
                 label = { Text("Nom de la routine", color = MaterialTheme.colorScheme.onBackground) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large
@@ -96,8 +94,8 @@ fun RoutineCreationScreen(navController: NavController, db: AppDatabase) {
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
+                value = uiState.description,
+                onValueChange = viewModel::updateDescription,
                 label = { Text("Description", color = MaterialTheme.colorScheme.onBackground) },
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -107,62 +105,58 @@ fun RoutineCreationScreen(navController: NavController, db: AppDatabase) {
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            DropDown("Catégorie", selectedCategory.name, Categorie.entries, categoryExpanded, { categoryExpanded = it }) {
-                selectedCategory = it
-            }
+            DropDown(
+                label = "Catégorie",
+                selectedValue = uiState.selectedCategory.name,
+                items = Categorie.entries,
+                expanded = uiState.categoryExpanded,
+                onExpandedChange = viewModel::expandCategory,
+                onItemSelected = viewModel::updateCategory
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            DropDown("Périodicité", selectedPeriodicity.name, Periodicite.entries, periodicityExpanded, { periodicityExpanded = it }) {
-                selectedPeriodicity = it
-            }
+            DropDown(
+                label = "Périodicité",
+                selectedValue = uiState.selectedPeriodicity.name,
+                items = Periodicite.entries,
+                expanded = uiState.periodicityExpanded,
+                onExpandedChange = viewModel::expandPeriodicity,
+                onItemSelected = viewModel::updatePeriodicity
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            DropDown("Priorité", selectedPriority.name, Priorite.entries, priorityExpanded, { priorityExpanded = it }) {
-                selectedPriority = it
-            }
+            DropDown(
+                label = "Priorité",
+                selectedValue = uiState.selectedPriority.name,
+                items = Priorite.entries,
+                expanded = uiState.priorityExpanded,
+                onExpandedChange = viewModel::expandPriority,
+                onItemSelected = viewModel::updatePriority
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             DateTimePicker(
                 label = "Date de début",
-                selectedDate = dateDebut,
-            ) { dateDebut = it }
+                selectedDate = uiState.dateDebut,
+                onDateChanged = viewModel::updateDateDebut
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             DateTimePicker(
                 label = "Date de fin",
-                selectedDate = dateFin
-            ) { dateFin = it }
+                selectedDate = uiState.dateFin,
+                onDateChanged = viewModel::updateDateFin
+            )
 
             Spacer(modifier = Modifier.weight(1f)) // Occupy remaining space
 
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                onClick = {
-                    if (name.text.isBlank()) {
-                        Toast.makeText(context, "Le nom est obligatoire", Toast.LENGTH_SHORT).show()
-                    } else {
-                        val newRoutine = Routine(
-                            nom = name.text,
-                            description = description.text,
-                            dateDebut = dateDebut,
-                            dateFin = dateFin,
-                            categorie = selectedCategory,
-                            periodicite = selectedPeriodicity,
-                            priorite = selectedPriority
-                        )
-                        CoroutineScope(Dispatchers.IO).launch {
-                            routineDao.insertAll(newRoutine)
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Routine ajoutée", Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
-                            }
-                        }
-                    }
-                },
+                onClick = viewModel::addRoutine,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

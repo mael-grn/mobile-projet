@@ -1,4 +1,4 @@
-package com.mobileuqac.routines
+package com.mobileuqac.routines.ui.views
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,12 +23,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.mobileuqac.routines.Screen
 import com.mobileuqac.routines.data.AppDatabase
 import com.mobileuqac.routines.data.Routine
+import com.mobileuqac.routines.ui.components.RoutineItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -109,7 +110,11 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
                                 navController.navigate(Screen.EditRoutine.createRoute(toEdit.id))
                             },
                                     onViewCompletions = { routineId ->
-                                navController.navigate(Screen.RoutineCompletions.createRoute(routineId))
+                                navController.navigate(
+                                    Screen.RoutineCompletions.createRoute(
+                                        routineId
+                                    )
+                                )
                             }
                         )
                     }
