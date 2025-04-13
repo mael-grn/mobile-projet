@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import androidx.room.Room
 import com.mobileuqac.routines.data.AppDatabase
 import com.mobileuqac.routines.ui.theme.RoutinesTheme
+import com.mobileuqac.routines.ui.viewModels.RoutineCompletionViewModel
 import com.mobileuqac.routines.ui.views.AddRoutineView
 import com.mobileuqac.routines.ui.views.EditRoutineView
 import com.mobileuqac.routines.ui.views.HomeScreen
@@ -39,6 +40,10 @@ class MainActivity() : ComponentActivity() {
 
         val addRoutineViewModel = AddRoutineViewModel(db.routineDao())
         val editRoutineViewModel = EditRoutineViewModel(db.routineDao())
+        val routineCompletionViewModel = RoutineCompletionViewModel(
+            db.routineDao(),
+            db.routineCompletionDao()
+        )
 
         enableEdgeToEdge()
 
@@ -89,7 +94,7 @@ class MainActivity() : ComponentActivity() {
                     }
                     composable(Screen.RoutineCompletions.route) { backStackEntry ->
                         val routineId = backStackEntry.arguments?.getString("routineId")?.toIntOrNull() ?: return@composable
-                        RoutineCompletionScreen(navController = navController, db = db, routineId = routineId)
+                        RoutineCompletionScreen(navController = navController, viewModel=routineCompletionViewModel,  routineId = routineId)
                     }
                 }
             }

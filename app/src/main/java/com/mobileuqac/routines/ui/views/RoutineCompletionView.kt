@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.mobileuqac.routines.data.*
 import com.mobileuqac.routines.data.Routine
+import com.mobileuqac.routines.ui.viewModels.RoutineCompletionViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,31 +42,20 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoutineCompletionScreen(
-    db: AppDatabase,
-    routineId: Int,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: RoutineCompletionViewModel,
+    routineId: Int
 ) {
-    val context = LocalContext.current
-    var completions by remember { mutableStateOf<List<RoutineCompletion>>(emptyList()) }
-    var routine by remember { mutableStateOf<Routine?>(null) }
+    val state by viewModel.uiState.collectAsState()
 
     LaunchedEffect(routineId) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val r = db.routineDao().getById(routineId)
-            val list = db.routineCompletionDao().getAllForRoutine(routineId)
-            withContext(Dispatchers.Main) {
-                routine = r
-                completions = list
-            }
-        }
+        viewModel.loadRoutineWithCompletions(routineId)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(text = routine?.nom ?: "Routine", style = MaterialTheme.typography.titleLarge)
-                },
+                title = { Text(state.routine?.nom ?: "Routine") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Retour")
@@ -72,18 +63,13 @@ fun RoutineCompletionScreen(
                 }
             )
         }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize()
-        ) {
-            if (completions.isEmpty()) {
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+            if (state.completions.isEmpty()) {
                 Text("Aucun accomplissement enregistré.")
             } else {
                 LazyColumn {
-                    items(completions) { completion ->
+                    items(state.completions) { completion ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -93,15 +79,7 @@ fun RoutineCompletionScreen(
                             Text(completion.date.toLocaleString())
 
                             Button(
-                                onClick = {
-                                    CoroutineScope(Dispatchers.IO).launch {
-                                        db.routineCompletionDao().delete(completion)
-                                        val updatedList = db.routineCompletionDao().getAllForRoutine(routineId)
-                                        withContext(Dispatchers.Main) {
-                                            completions = updatedList
-                                        }
-                                    }
-                                },
+                                onClick = { viewModel.deleteCompletion(completion) },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                             ) {
                                 Text("Supprimer", color = Color.White)
@@ -113,3 +91,4 @@ fun RoutineCompletionScreen(
         }
     }
 }
+
