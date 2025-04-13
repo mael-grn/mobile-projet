@@ -81,6 +81,10 @@ class MainActivity : ComponentActivity() {
                     ) {
                         RoutineCreationScreen(navController, db)
                     }
+                    composable(Screen.RoutineCompletions.route) { backStackEntry ->
+                        val routineId = backStackEntry.arguments?.getString("routineId")?.toIntOrNull() ?: return@composable
+                        RoutineCompletionScreen(navController = navController, db = db, routineId = routineId)
+                    }
                 }
             }
         }

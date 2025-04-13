@@ -6,4 +6,7 @@ sealed class Screen (val route : String) {
     object EditRoutine : Screen("Edit_Routine/{routineId}") {
         fun createRoute(routineId: Int) = "Edit_Routine/$routineId"
     }
+    object RoutineCompletions : Screen("Routine_Completions/{routineId}") {
+        fun createRoute(routineId: Int) = "Routine_Completions/$routineId"
+    }
 }

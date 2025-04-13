@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -16,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,10 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mobileuqac.routines.data.*
 import com.mobileuqac.routines.data.Routine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Date
 
 @Composable
-fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit, onClick: (Routine) -> Unit) {
+fun RoutineItem(routine: Routine, db: AppDatabase, onDelete: (Routine) -> Unit, onClick: (Routine) -> Unit, onViewCompletions: (Int) -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {
@@ -88,6 +97,44 @@ fun RoutineItem(routine: Routine, onDelete: (Routine) -> Unit, onClick: (Routine
                     )
                 }
             }
+            var completionCount by remember { mutableStateOf(0) }
+
+            // Chargement initial du compteur
+            LaunchedEffect(routine.id) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val count = db.routineCompletionDao().getTotalCompletions(routine.id)
+                    withContext(Dispatchers.Main) {
+                        completionCount = count
+                    }
+                }
+            }
+
+                Button(
+                    onClick = {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            db.routineCompletionDao().insert(
+                                RoutineCompletion(routineId = routine.id, date = Date())
+                            )
+                            // Met à jour le compteur après insertion
+                            val newCount = db.routineCompletionDao().getTotalCompletions(routine.id)
+                            withContext(Dispatchers.Main) {
+                                completionCount = newCount
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                ) {
+                    Text("J’ai fait cette routine", color = Color.White)
+                }
+                Text("Accomplie $completionCount fois", color = Color.White)
+                Button(
+                    onClick = { onViewCompletions(routine.id) },
+                    modifier = Modifier.padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                ) {
+                    Text("Voir les accomplissements", color = Color.White)
+                }
         }
     }
 }

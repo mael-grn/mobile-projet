@@ -98,6 +98,7 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
                     items(routines) { routine ->
                         RoutineItem(
                             routine = routine,
+                            db = db,
                             onDelete = { toDelete ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     db.routineDao().delete(toDelete)
@@ -106,6 +107,9 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
                             },
                             onClick = { toEdit ->
                                 navController.navigate(Screen.EditRoutine.createRoute(toEdit.id))
+                            },
+                                    onViewCompletions = { routineId ->
+                                navController.navigate(Screen.RoutineCompletions.createRoute(routineId))
                             }
                         )
                     }
