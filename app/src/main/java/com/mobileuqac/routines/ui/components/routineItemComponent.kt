@@ -36,7 +36,7 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 
 @Composable
-fun RoutineItem(routine: Routine, db: AppDatabase, onDelete: (Routine) -> Unit, onClick: (Routine) -> Unit, onViewCompletions: (Int) -> Unit) {
+fun RoutineItem(routine: Routine, db: AppDatabase, onDelete: (Routine) -> Unit, onClick: (Routine) -> Unit, onViewCompletions: (Long) -> Unit) {
     var showDialog by remember { mutableStateOf(false) }
 
     if (showDialog) {

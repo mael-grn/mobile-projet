@@ -25,7 +25,7 @@ class RoutineCompletionViewModel(
     private val _uiState = MutableStateFlow(RoutineCompletionUiState())
     val uiState: StateFlow<RoutineCompletionUiState> = _uiState
 
-    fun loadRoutineWithCompletions(routineId: Int) {
+    fun loadRoutineWithCompletions(routineId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val routine = routineDao.getById(routineId)
             val completions = completionDao.getAllForRoutine(routineId)

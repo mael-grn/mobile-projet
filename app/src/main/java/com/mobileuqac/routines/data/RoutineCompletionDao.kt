@@ -13,13 +13,13 @@ interface RoutineCompletionDao {
     fun insert(completion: RoutineCompletion)
 
     @Query("SELECT * FROM routine_completion WHERE routineId = :routineId")
-    fun getAllForRoutine(routineId: Int): List<RoutineCompletion>
+    fun getAllForRoutine(routineId: Long): List<RoutineCompletion>
 
     @Query("SELECT COUNT(*) FROM routine_completion WHERE routineId = :routineId")
-    fun getTotalCompletions(routineId: Int): Int
+    fun getTotalCompletions(routineId: Long): Int
 
     @Query("SELECT COUNT(*) FROM routine_completion WHERE routineId = :routineId AND date(date) = date(:targetDate)")
-    fun wasCompletedOn(routineId: Int, targetDate: Date): Int
+    fun wasCompletedOn(routineId: Long, targetDate: Date): Int
     @Delete
     fun delete(completion: RoutineCompletion)
 }

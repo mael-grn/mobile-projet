@@ -6,7 +6,7 @@ import java.util.Date
 
 @Entity(tableName = "routine")
 class Routine(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val nom: String?,
     val description: String,
     val categorie: Categorie,

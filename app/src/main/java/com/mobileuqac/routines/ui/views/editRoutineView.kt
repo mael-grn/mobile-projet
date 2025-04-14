@@ -25,7 +25,7 @@ import EditRoutineViewModel
 @Composable
 fun EditRoutineView(
     navController: NavController,
-    routineId: Int,
+    routineId: Long,
     viewModel: EditRoutineViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()

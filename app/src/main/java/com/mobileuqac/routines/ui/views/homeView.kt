@@ -28,14 +28,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.mobileuqac.routines.Screen
 import com.mobileuqac.routines.data.AppDatabase
+import com.mobileuqac.routines.data.Notification
 import com.mobileuqac.routines.data.Routine
 import com.mobileuqac.routines.ui.components.RoutineItem
+import com.mobileuqac.routines.utils.NotificationScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(navController: NavHostController, db: AppDatabase) {
+fun HomeScreen(navController: NavHostController, db: AppDatabase, notificationScheduler: NotificationScheduler) {
 
     // Liste des routines
     var routines by remember { mutableStateOf(emptyList<Routine>()) }
@@ -103,16 +105,21 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase) {
                             onDelete = { toDelete ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     db.routineDao().delete(toDelete)
+                                    val listNotif: List<Notification> = db.notificationDao().getAllFromRoutine(routine.id)
+                                    for(notif in listNotif){
+                                        notificationScheduler.cancelNotification(notif.id.toInt())
+                                    }
+                                    db.notificationDao().delAllFromRoutine(routine.id)
                                     routines = db.routineDao().getAll()
                                 }
                             },
                             onClick = { toEdit ->
-                                navController.navigate(Screen.EditRoutine.createRoute(toEdit.id))
+                                navController.navigate(Screen.EditRoutine.createRoute(toEdit.id.toInt()))
                             },
                                     onViewCompletions = { routineId ->
                                 navController.navigate(
                                     Screen.RoutineCompletions.createRoute(
-                                        routineId
+                                        routineId.toInt()
                                     )
                                 )
                             }

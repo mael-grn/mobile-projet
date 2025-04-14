@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 data class EditRoutineUiState(
-    val id: Int? = null,
+    val id: Long? = null,
     val name: String = "",
     val description: String = "",
     val dateDebut: Date = Date(),
@@ -28,7 +28,7 @@ class EditRoutineViewModel(private val routineDao: RoutineDao) : ViewModel() {
     private val _uiState = MutableStateFlow(EditRoutineUiState())
     val uiState: StateFlow<EditRoutineUiState> = _uiState
 
-    fun loadRoutine(routineId: Int) {
+    fun loadRoutine(routineId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             val routine = routineDao.getById(routineId)
             routine?.let {

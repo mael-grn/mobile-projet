@@ -24,7 +24,7 @@ import com.mobileuqac.routines.data.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddRoutineView(navController: NavController, viewModel: AddRoutineViewModel) {
+fun AddRoutineView(navController: NavController, viewModel: AddRoutineViewModel, openAppSettings: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 

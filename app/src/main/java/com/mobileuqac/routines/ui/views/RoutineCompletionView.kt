@@ -44,7 +44,7 @@ import kotlinx.coroutines.withContext
 fun RoutineCompletionScreen(
     navController: NavHostController,
     viewModel: RoutineCompletionViewModel,
-    routineId: Int
+    routineId: Long
 ) {
     val state by viewModel.uiState.collectAsState()
 

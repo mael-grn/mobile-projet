@@ -7,6 +7,6 @@ import java.util.Date
 @Entity(tableName = "routine_completion")
 data class RoutineCompletion(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val routineId: Int,
+    val routineId: Long,
     val date: Date
 )
