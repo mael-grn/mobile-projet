@@ -196,7 +196,7 @@ class MainActivity() : ComponentActivity() {
                         enterTransition = { scaleIn(animationSpec = tween(500)) },
                         exitTransition = { scaleOut(animationSpec = tween(500)) }
                     ) { backStackEntry ->
-                        val routineId = backStackEntry.arguments?.getLong("routineId") ?: return@composable
+                        val routineId = backStackEntry.arguments?.getInt("routineId") ?: return@composable
                         EditRoutineView(navController = navController, routineId = routineId, viewModel = editRoutineViewModel)
                     }
 

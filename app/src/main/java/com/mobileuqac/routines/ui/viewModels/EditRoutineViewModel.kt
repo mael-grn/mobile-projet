@@ -1,3 +1,4 @@
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobileuqac.routines.data.*
@@ -28,10 +29,10 @@ class EditRoutineViewModel(private val routineDao: RoutineDao) : ViewModel() {
     private val _uiState = MutableStateFlow(EditRoutineUiState())
     val uiState: StateFlow<EditRoutineUiState> = _uiState
 
-    fun loadRoutine(routineId: Long) {
+    fun loadRoutine(routineId: Int) {
         viewModelScope.launch(Dispatchers.IO) {
             val routine = routineDao.getById(routineId)
-            routine?.let {
+            routine.let {
                 _uiState.update {
                     it.copy(
                         id = routine.id,

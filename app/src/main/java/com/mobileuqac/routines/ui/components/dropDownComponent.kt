@@ -1,4 +1,3 @@
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,34 +19,35 @@ fun <T : Enum<T>> DropDown(
     onExpandedChange: (Boolean) -> Unit,
     onItemSelected: (T) -> Unit
 ) {
-    Column {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = onExpandedChange
+    ) {
         OutlinedTextField(
             value = selectedValue,
-            onValueChange = { /* Ne rien faire, lecture seule */ },
-            label = { Text(label) },
+            onValueChange = {},
             readOnly = true,
+            label = { Text(label) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .menuAnchor() // <- important pour ancrer le menu ici
+                .fillMaxWidth()
         )
-        ExposedDropdownMenuBox(
+
+        ExposedDropdownMenu(
             expanded = expanded,
-            onExpandedChange = onExpandedChange
+            onDismissRequest = { onExpandedChange(false) }
         ) {
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) }
-            ) {
-                items.forEach { item ->
-                    DropdownMenuItem(
-                        text = { Text(item.name) },
-                        onClick = {
-                            onItemSelected(item)
-                            onExpandedChange(false)
-                        }
-                    )
-                }
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(item.name) },
+                    onClick = {
+                        onItemSelected(item)
+                        onExpandedChange(false)
+                    }
+                )
             }
         }
     }

@@ -114,7 +114,7 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase, notificationSc
                                 }
                             },
                             onClick = { toEdit ->
-                                navController.navigate(Screen.EditRoutine.createRoute(toEdit.id.toInt()))
+                                navController.navigate(Screen.EditRoutine.createRoute(toEdit.id))
                             },
                                     onViewCompletions = { routineId ->
                                 navController.navigate(

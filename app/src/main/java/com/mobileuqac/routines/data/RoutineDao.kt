@@ -12,7 +12,7 @@ interface RoutineDao {
     fun getAll(): List<Routine>
 
     @Query("SELECT * FROM routine WHERE id = :id LIMIT 1")
-    fun getById(id: Long): Routine
+    fun getById(id: Int): Routine
 
     @Insert
     fun insertAll(vararg routines: Routine)

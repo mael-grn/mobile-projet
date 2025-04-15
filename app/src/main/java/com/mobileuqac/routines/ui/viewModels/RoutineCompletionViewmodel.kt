@@ -27,7 +27,7 @@ class RoutineCompletionViewModel(
 
     fun loadRoutineWithCompletions(routineId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            val routine = routineDao.getById(routineId)
+            val routine = routineDao.getById(routineId.toInt())
             val completions = completionDao.getAllForRoutine(routineId)
             _uiState.update {
                 it.copy(routine = routine, completions = completions)

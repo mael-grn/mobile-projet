@@ -25,13 +25,13 @@ import EditRoutineViewModel
 @Composable
 fun EditRoutineView(
     navController: NavController,
-    routineId: Long,
+    routineId: Int,
     viewModel: EditRoutineViewModel
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(routineId) {
         viewModel.loadRoutine(routineId)
     }
 
@@ -43,8 +43,9 @@ fun EditRoutineView(
         }
     }
 
-    LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { message ->
+    LaunchedEffect(key1 = uiState.errorMessage) {
+        val message = uiState.errorMessage
+        if (!message.isNullOrEmpty()) {
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             viewModel.clearErrorMessage()
         }
