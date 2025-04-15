@@ -50,6 +50,7 @@ fun DateTimePicker(label: String, selectedDate: Date, onDateChanged: (Date) -> U
                     tempCalendar.set(Calendar.YEAR, year)
                     tempCalendar.set(Calendar.MONTH, month)
                     tempCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                    onDateChanged(tempCalendar.time)
                     showDatePicker = false
                     showTimePicker = true
                 },
