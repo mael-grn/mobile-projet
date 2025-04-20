@@ -46,8 +46,33 @@ import com.mobileuqac.routines.ui.views.RoutineCompletionScreen
 import com.mobileuqac.routines.utils.NotificationScheduler
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.graphics.Color
+// Google Calendar API
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.Scope
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
+import com.google.api.services.calendar.CalendarScopes
+import android.app.Activity
+import android.util.Log
+
+
 
 class MainActivity() : ComponentActivity() {
+
+    // Google Calendar API
+    private lateinit var googleSignInClient: GoogleSignInClient
+
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            handleSignInResult(result.data)
+        }
+    }
 
     private lateinit var exactAlarmPermissionResult: ActivityResultLauncher<String>
     private var hasExactAlarmPermissionState = mutableStateOf(false)
@@ -103,10 +128,25 @@ class MainActivity() : ComponentActivity() {
 
         enableEdgeToEdge()
 
+
+        // Google Calendar API
+        // Google sign in
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestScopes(
+                Scope(CalendarScopes.CALENDAR)
+            )
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+
         setContent {
+
             RoutinesTheme {
                 val navController = rememberNavController()
                 val context = LocalContext.current
+
 
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission()) {
@@ -187,7 +227,7 @@ class MainActivity() : ComponentActivity() {
                         enterTransition = { scaleIn(animationSpec = tween(500)) },
                         exitTransition = { scaleOut(animationSpec = tween(500)) }
                     ) {
-                        HomeScreen(navController, db, notificationScheduler)
+                        HomeScreen(navController, db, notificationScheduler, this@MainActivity) //Check here if theres a bug
                     }
 
                     composable(
@@ -257,4 +297,33 @@ class MainActivity() : ComponentActivity() {
             startActivity(this)
         }
     }
+
+
+    // Google Calendar API
+    public fun launchGoogleSignIn() {
+        val signInIntent = googleSignInClient.signInIntent
+        signInLauncher.launch(signInIntent)
+    }
+
+    // Google Calendar API
+    private fun handleSignInResult(data: Intent?) {
+        val task: Task<GoogleSignInAccount> =
+            GoogleSignIn.getSignedInAccountFromIntent(data)
+        try {
+            val account = task.getResult(ApiException::class.java)!!
+            Log.d("GoogleSignIn", "Login successful to account ${account.email}")
+        } catch (e: ApiException) {
+            Log.w("GoogleSignIn", "Login failed, code=${e.statusCode}", e)
+        }
+    }
+
+    // Google Calendar API
+    public fun ensureSignedIn(): Boolean {
+        val account = GoogleSignIn.getLastSignedInAccount(this)
+        return account != null && GoogleSignIn.hasPermissions(
+            account,
+            Scope(CalendarScopes.CALENDAR)
+        )
+    }
+
 }

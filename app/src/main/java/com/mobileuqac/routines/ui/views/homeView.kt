@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.mobileuqac.routines.MainActivity
 import com.mobileuqac.routines.Screen
 import com.mobileuqac.routines.data.AppDatabase
 import com.mobileuqac.routines.data.Notification
@@ -35,9 +36,10 @@ import com.mobileuqac.routines.utils.NotificationScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Button
 
 @Composable
-fun HomeScreen(navController: NavHostController, db: AppDatabase, notificationScheduler: NotificationScheduler) {
+fun HomeScreen(navController: NavHostController, db: AppDatabase, notificationScheduler: NotificationScheduler, activity: MainActivity) {
 
     // Liste des routines
     var routines by remember { mutableStateOf(emptyList<Routine>()) }
@@ -66,6 +68,14 @@ fun HomeScreen(navController: NavHostController, db: AppDatabase, notificationSc
                 .background(MaterialTheme.colorScheme.background)
 
         ) {
+            // Afficher le bouton de login pour Google Calendar
+            if (!activity.ensureSignedIn()) {
+                Button(onClick = { activity.launchGoogleSignIn() }) {
+                    Text("Connect to Google Calendar!")
+                }
+            }
+
+
             if (routines.isEmpty()) {
                 Column(
                     modifier = Modifier
