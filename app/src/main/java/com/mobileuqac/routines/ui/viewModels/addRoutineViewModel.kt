@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.mobileuqac.routines.data.Categorie
 import com.mobileuqac.routines.data.Notification
 import com.mobileuqac.routines.data.NotificationDao
@@ -29,6 +30,23 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
+
+
+import androidx.lifecycle.viewModelScope
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.googleapis.json.GoogleJsonResponseException
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.calendar.Calendar as GoogleCalendar
+import com.google.api.services.calendar.model.Event
+import com.google.api.services.calendar.model.EventDateTime
+import com.google.type.DateTime
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import com.google.api.client.util.DateTime as UtilDateTime
+import java.util.TimeZone
+
+
 
 data class AddRoutineUiState(
     val name: String = "",
@@ -50,6 +68,8 @@ class AddRoutineViewModel(
     private val routineDao: RoutineDao,
     private val notificationDao: NotificationDao,
     private val notificationScheduler: NotificationScheduler,
+    // Google Calendar API
+    private val credential: GoogleAccountCredential
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddRoutineUiState())
@@ -113,8 +133,14 @@ class AddRoutineViewModel(
         )
 
         viewModelScope.launch(Dispatchers.IO) {
-            var routineId = routineDao.insert(newRoutine)
+            val routineId = routineDao.insert(newRoutine)
             scheduleNotifications(routineId, newRoutine.nom.toString(), newRoutine.dateDebut, newRoutine.periodicite)
+            // Google Calendar API
+            try {
+                insertToCalendar(newRoutine)
+            } catch (e: Exception) {
+                Log.e("AddRoutineViewModel", "Calendar sync failed", e)
+            }
             _uiState.update { it.copy(isRoutineAdded = true, errorMessage = null) }
         }
     }
@@ -159,5 +185,35 @@ class AddRoutineViewModel(
                 Log.e("AddRoutineViewModel", "Erreur lors de la planification des notifications", e)
             }
         }
+    }
+
+    // Google Calendar API
+    private fun insertToCalendar(routine: Routine) {
+        val service = GoogleCalendar.Builder(
+            NetHttpTransport(),
+            GsonFactory(),
+            credential
+        )
+            .setApplicationName("Routines App")
+            .build()
+
+        if (credential.selectedAccountName != null){
+            Log.d("TEST DEBUG CREDENTIAL NAME: ", credential.selectedAccountName.toString())
+        }
+        else {
+            Log.e("TEST DEBUG CREDENTIAL NAME: ", "CREDENTIAL NAME NULL")
+        }
+
+        val event = Event()
+            .setSummary(routine.nom)
+            .setDescription(routine.description)
+
+        val startDateTime = UtilDateTime(routine.dateDebut.time, TimeZone.getDefault().rawOffset / 60000)
+        val endDateTime = UtilDateTime(routine.dateFin.time, TimeZone.getDefault().rawOffset / 60000)
+        event.start = EventDateTime().setDateTime(startDateTime)
+        event.end = EventDateTime().setDateTime(endDateTime)
+
+        service.events().insert("primary", event).execute()
+
     }
 }

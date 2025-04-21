@@ -49,6 +49,7 @@ android {
 
 dependencies {
     implementation(libs.hilt.android)
+    implementation(libs.protolite.well.known.types)
     kapt(libs.hilt.android.compiler)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.navigation.runtime.ktx)

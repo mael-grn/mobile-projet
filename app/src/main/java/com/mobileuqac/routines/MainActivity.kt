@@ -57,13 +57,15 @@ import com.google.android.gms.tasks.Task
 import com.google.api.services.calendar.CalendarScopes
 import android.app.Activity
 import android.util.Log
-
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 
 
 class MainActivity() : ComponentActivity() {
 
     // Google Calendar API
+    private var isSignedInState = mutableStateOf(false)
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var credential: GoogleAccountCredential
 
     private val signInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -73,6 +75,7 @@ class MainActivity() : ComponentActivity() {
             handleSignInResult(result.data)
         }
     }
+
 
     private lateinit var exactAlarmPermissionResult: ActivityResultLauncher<String>
     private var hasExactAlarmPermissionState = mutableStateOf(false)
@@ -84,6 +87,9 @@ class MainActivity() : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Google Calendar API
+        isSignedInState.value = ensureSignedIn()
 
         // Gestion des permissions pour les notifications
         notificationPermissionResult = registerForActivityResult(
@@ -118,8 +124,15 @@ class MainActivity() : ComponentActivity() {
             AppDatabase::class.java, "database-name"
         ).fallbackToDestructiveMigration().build()
 
+
+        // Googale Calendar API
+        credential = GoogleAccountCredential.usingOAuth2(
+            this,
+            listOf(CalendarScopes.CALENDAR)
+        )
+
         val notificationScheduler = NotificationScheduler(this)
-        val addRoutineViewModel = AddRoutineViewModel(db.routineDao(), db.notificationDao(), notificationScheduler)
+        val addRoutineViewModel = AddRoutineViewModel(db.routineDao(), db.notificationDao(), notificationScheduler, credential)
         val editRoutineViewModel = EditRoutineViewModel(db.routineDao())
         val routineCompletionViewModel = RoutineCompletionViewModel(
             db.routineDao(),
@@ -147,6 +160,8 @@ class MainActivity() : ComponentActivity() {
                 val navController = rememberNavController()
                 val context = LocalContext.current
 
+                // Google Calendar API
+                val signedIn = isSignedInState.value
 
                 LaunchedEffect(Unit) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission()) {
@@ -214,6 +229,16 @@ class MainActivity() : ComponentActivity() {
                         }
                     )
                 }
+
+                // Google Calendar API
+                if (!signedIn) {
+                    Button(onClick = { launchGoogleSignIn() } ) {
+                        Text("Connect to Google Calendar")
+                    }
+                } else {
+                    Text("Logged in as: ${GoogleSignIn.getLastSignedInAccount(this@MainActivity)?.email}")
+                }
+
 
                 NavHost(
                     navController = navController,
@@ -307,14 +332,19 @@ class MainActivity() : ComponentActivity() {
 
     // Google Calendar API
     private fun handleSignInResult(data: Intent?) {
-        val task: Task<GoogleSignInAccount> =
-            GoogleSignIn.getSignedInAccountFromIntent(data)
+
         try {
-            val account = task.getResult(ApiException::class.java)!!
-            Log.d("GoogleSignIn", "Login successful to account ${account.email}")
+            val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)!!
+            isSignedInState.value = true
+
+            credential.selectedAccountName = account.account?.name
+
+            Log.d("GoogleSignIn", "Login successfule: ${account.email}")
         } catch (e: ApiException) {
             Log.w("GoogleSignIn", "Login failed, code=${e.statusCode}", e)
         }
+
+
     }
 
     // Google Calendar API
