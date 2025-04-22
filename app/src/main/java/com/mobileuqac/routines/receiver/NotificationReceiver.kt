@@ -21,6 +21,15 @@ class NotificationReceiver : BroadcastReceiver() {
         const val NOTIFICATION_TITLE = "notification_title"
     }
 
+    class RoutineActionReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val routineTitle = intent.getStringExtra("routine_title") ?: "Routine"
+
+            // Ici tu peux marquer la routine comme complétée dans la base de données
+            Toast.makeText(context, "$routineTitle marquée comme complétée", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
         val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "Notification reçue !"
         val title = intent.getStringExtra(NOTIFICATION_TITLE) ?: "Nouvelle notification"
@@ -47,17 +56,35 @@ class NotificationReceiver : BroadcastReceiver() {
     }
 
     private fun showNotification(context: Context, notificationManager: NotificationManager, title: String, message: String, notificationId: Int) {
-        val notificationIntent = Intent(context, MainActivity::class.java) // Intent pour ouvrir l'app au clic
-        val pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val notificationIntent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context, 0, notificationIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        // 👉 Intent pour l'action "Complétée"
+        val completeIntent = Intent(context, RoutineActionReceiver::class.java).apply {
+            putExtra("routine_title", title)
+        }
+
+        val completePendingIntent = PendingIntent.getBroadcast(
+            context, 1, completeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Remplacez par votre icône
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
-            .setAutoCancel(true) // Supprime la notification après clic
+            .setAutoCancel(true)
+            .addAction(
+                android.R.drawable.checkbox_on_background,
+                "Complétée",
+                completePendingIntent
+            )
 
         notificationManager.notify(notificationId, builder.build())
     }
